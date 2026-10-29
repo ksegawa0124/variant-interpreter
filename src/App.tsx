@@ -3,6 +3,8 @@ import { parseVariantInput, type Genome } from './input/parseInput.ts'
 import { routeInput, type Engine } from './input/route.ts'
 import { analyzeSmall, type SmallAnalysis } from './engine/gather.ts'
 import { SmallResultView } from './SmallResult.tsx'
+import { CnvResultView } from './CnvResult.tsx'
+import { analyzeCnv, toCnvRegion, type CnvAnalysis } from './cnv/gather.ts'
 import { loadSettings, saveSettings, sanitizeSettings, type Settings } from './settings.ts'
 import './App.css'
 
@@ -39,6 +41,8 @@ function App() {
   const [submitted, setSubmitted] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [analysis, setAnalysis] = useState<SmallAnalysis | null>(null)
+  const [cnv, setCnv] = useState<CnvAnalysis | null>(null)
+  const [cnvError, setCnvError] = useState<string | null>(null)
 
   const parsed = useMemo(() => parseVariantInput(variant), [variant])
   const route = useMemo(() => routeInput(parsed, genome, settings), [parsed, genome, settings])
@@ -65,7 +69,7 @@ function App() {
             設定
           </button>
         </div>
-        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 5）</p>
+        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 6）</p>
 
         <form
           className="home-form"
@@ -75,6 +79,18 @@ function App() {
             if (!v) return
             setSubmitted(v)
             setAnalysis(null)
+            setCnv(null)
+            setCnvError(null)
+            if (route.engine === 'cnv') {
+              const t = toCnvRegion(parsed, genome)
+              if ('error' in t) return setCnvError(t.error)
+              setBusy(true)
+              analyzeCnv(t.region, route.genome ?? t.genome)
+                .then(setCnv)
+                .catch((err) => setCnvError(`予期しないエラー: ${err}`))
+                .finally(() => setBusy(false))
+              return
+            }
             if (route.engine !== 'small') return
             setBusy(true)
             analyzeSmall(parsed, genome, gene.trim() || undefined, transcript.trim() || undefined)
@@ -139,7 +155,9 @@ function App() {
 
         {busy && <p className="muted" role="status">解析中…（外部 API を呼び出しています）</p>}
         {submitted && !busy && route.engine === 'small' && analysis && <SmallResultView key={submitted} a={analysis} />}
-        {submitted && !busy && route.engine !== 'small' && route.engine !== 'invalid' && (
+        {cnvError && <p className="warn" role="alert">⚠ {cnvError}</p>}
+        {submitted && !busy && route.engine === 'cnv' && cnv && <CnvResultView key={submitted} a={cnv} />}
+        {submitted && !busy && route.engine !== 'small' && route.engine !== 'cnv' && route.engine !== 'invalid' && (
           <p className="muted">「{submitted}」は {ENGINE_LABEL[route.engine]} の対象です。このエンジンは後続フェーズで接続します。</p>
         )}
       </main>

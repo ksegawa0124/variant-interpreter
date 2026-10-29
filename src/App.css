@@ -121,3 +121,8 @@ button {
 .sources { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .sources th, .sources td { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; }
 .sources tr.failed td { color: var(--danger); }
+
+.table-wrap { max-height: 360px; overflow: auto; border: 1px solid var(--border); }
+.sources.genes td, .sources.genes th { white-space: nowrap; }
+details { margin: 12px 0; }
+summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
