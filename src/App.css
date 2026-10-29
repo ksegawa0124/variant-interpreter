@@ -1,6 +1,7 @@
 .app-disclaimer {
   position: sticky;
   top: 0;
+  z-index: 10;
   padding: 8px 16px;
   background: #fff3cd;
   color: #664d03;
@@ -14,7 +15,76 @@ main {
   padding: 24px 16px;
 }
 
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-form {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.home-form label,
+.dialog label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+input,
+select {
+  padding: 6px 8px;
+  font: inherit;
+}
+
+button {
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
 .privacy-notice {
-  color: #b02a37;
+  margin: 0;
+  color: var(--danger);
   font-weight: 600;
+}
+
+.detect {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.detect p {
+  margin: 4px 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.warn {
+  color: var(--warn);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dialog {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 90vw);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
 }
