@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { parseVariantInput, type Genome } from './input/parseInput.ts'
 import { routeInput, type Engine } from './input/route.ts'
+import { analyzeSmall, type SmallAnalysis } from './engine/gather.ts'
+import { SmallResultView } from './SmallResult.tsx'
 import { loadSettings, saveSettings, sanitizeSettings, type Settings } from './settings.ts'
 import './App.css'
 
@@ -35,6 +37,8 @@ function App() {
   const [gene, setGene] = useState('')
   const [variant, setVariant] = useState('')
   const [submitted, setSubmitted] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [analysis, setAnalysis] = useState<SmallAnalysis | null>(null)
 
   const parsed = useMemo(() => parseVariantInput(variant), [variant])
   const route = useMemo(() => routeInput(parsed, genome, settings), [parsed, genome, settings])
@@ -61,13 +65,22 @@ function App() {
             設定
           </button>
         </div>
-        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 3）</p>
+        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 5）</p>
 
         <form
           className="home-form"
           onSubmit={(e) => {
             e.preventDefault()
-            if (variant.trim()) setSubmitted(variant.trim())
+            const v = variant.trim()
+            if (!v) return
+            setSubmitted(v)
+            setAnalysis(null)
+            if (route.engine !== 'small') return
+            setBusy(true)
+            analyzeSmall(parsed, genome, gene.trim() || undefined, transcript.trim() || undefined)
+              .then(setAnalysis)
+              .catch((err) => setAnalysis({ genome, allele: null, alleleCandidates: 0, vep: null, choice: null, evidence: null, sources: [], fatal: `予期しないエラー: ${err}` }))
+              .finally(() => setBusy(false))
           }}
         >
           <label>
@@ -124,10 +137,10 @@ function App() {
           </section>
         )}
 
-        {submitted && route.engine !== 'invalid' && (
-          <p className="muted">
-            「{submitted}」を受け付けました。解析エンジンは Phase 5 以降で接続します（Phase 3 は入力判別と振り分けまで）。
-          </p>
+        {busy && <p className="muted" role="status">解析中…（外部 API を呼び出しています）</p>}
+        {submitted && !busy && route.engine === 'small' && analysis && <SmallResultView key={submitted} a={analysis} />}
+        {submitted && !busy && route.engine !== 'small' && route.engine !== 'invalid' && (
+          <p className="muted">「{submitted}」は {ENGINE_LABEL[route.engine]} の対象です。このエンジンは後続フェーズで接続します。</p>
         )}
       </main>
 

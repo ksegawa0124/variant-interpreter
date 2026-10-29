@@ -88,3 +88,36 @@ button {
   background: var(--bg);
   color: var(--text);
 }
+
+/* ---- 解析結果 ---- */
+.result { margin-top: 24px; }
+.variant-head dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+.variant-head dt { color: var(--muted); }
+.variant-head dd { margin: 0; word-break: break-all; }
+.verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0 8px; }
+.badge { padding: 6px 14px; border-radius: 6px; font-weight: 700; color: #fff; }
+.badge-p { background: #b42318; }
+.badge-lp { background: #d9622b; }
+.badge-vus { background: #667085; }
+.badge-lb { background: #3b8f6a; }
+.badge-b { background: #1a7f4b; }
+.total { font-size: 1.2rem; font-weight: 700; }
+.provisional { padding: 2px 8px; border: 1px solid var(--warn); border-radius: 4px; color: var(--warn); font-size: 0.85rem; }
+.brief { margin: 4px 0 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.code-card { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; }
+.code-card header { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.code-card .dir.pathogenic { color: #b42318; font-size: 0.8rem; }
+.code-card .dir.benign { color: #1a7f4b; font-size: 0.8rem; }
+.code-card .pts { margin-left: auto; font-weight: 600; }
+.code-card p { margin: 4px 0; }
+.code-card .title { color: var(--muted); font-size: 0.85rem; }
+.code-card .note { color: var(--muted); font-size: 0.8rem; }
+.code-card .override { color: var(--warn); font-size: 0.85rem; font-weight: 600; }
+.code-card.counted { border-width: 2px; }
+.code-card.state-not_evaluable { border-style: dashed; border-color: var(--warn); }
+.code-card.state-not_met, .code-card.state-not_applicable, .code-card.vcep-na { opacity: 0.6; }
+.manual-ctl { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
+.sources { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.sources th, .sources td { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.sources tr.failed td { color: var(--danger); }
