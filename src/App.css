@@ -1,0 +1,20 @@
+.app-disclaimer {
+  position: sticky;
+  top: 0;
+  padding: 8px 16px;
+  background: #fff3cd;
+  color: #664d03;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.privacy-notice {
+  color: #b02a37;
+  font-weight: 600;
+}
