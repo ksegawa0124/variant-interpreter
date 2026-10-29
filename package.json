@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:apis": "node scripts/verify-apis.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
