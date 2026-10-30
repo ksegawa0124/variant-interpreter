@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { ReportButtons } from './report/ReportButtons.tsx'
+import { buildCnvReport } from './report/report.ts'
 import { autoEvaluateCnv, formatCnvPoints, scoreCnv, type CnvItemEval, type CnvManualMap } from './cnv/engine.ts'
 import type { CnvAnalysis } from './cnv/gather.ts'
 import { CnvViz } from './viz/CnvViz.tsx'
@@ -72,7 +74,8 @@ export function CnvResultView({ a }: { a: CnvAnalysis }) {
   const r = useMemo(() => scoreCnv(a.evidence, auto, manual), [a.evidence, auto, manual])
   const { region } = a.evidence
   const type = region.type
-  const countedBy = (key: string) => r.counted.find((c) => c.key === key)?.points
+  const buildReport = useCallback(() => buildCnvReport(a, r, manual), [a, r, manual])
+  const countedBy =(key: string) => r.counted.find((c) => c.key === key)?.points
   const len = region.end - region.start + 1
   const overlappingRegions = useMemo(
     () => (a.evidence.dosageRegions.status === 'ok'
@@ -110,6 +113,7 @@ export function CnvResultView({ a }: { a: CnvAnalysis }) {
         分類境界: {CNV_CLASSES.map((c) => `${c.label} ${Number.isFinite(c.min) ? formatCnvPoints(c.min) : '…'}〜${Number.isFinite(c.max) ? formatCnvPoints(c.max) : '…'}`).join(' / ')}
       </p>
       {r.warnings.map((w) => <p key={w} className="warn">⚠ {w}</p>)}
+      <ReportButtons build={buildReport} filename={`cnv-report-chr${region.chrom}-${region.start}-${region.end}`} />
 
       <CnvViz
         region={{ ...region, type }} genes={r.genes} dosageRegions={overlappingRegions}

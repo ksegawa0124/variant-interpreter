@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { ReportButtons } from './report/ReportButtons.tsx'
+import { buildSmallReport } from './report/report.ts'
 import { PM1_DOMAIN_DBS, SMALL_CODES, STRENGTH_LABEL, STRENGTH_POINTS, THRESHOLDS, type Strength } from './engine/rules.ts'
 import { ErepoPanel } from './ErepoPanel.tsx'
 import { TranscriptViz } from './viz/TranscriptViz.tsx'
@@ -76,10 +78,11 @@ function CodeCard({ ev, points, counted, manual, onChange }: { ev: CodeEvaluatio
   )
 }
 
-export function SmallResultView({ a }: { a: SmallAnalysis }) {
+export function SmallResultView({ a, input }: { a: SmallAnalysis; input: string }) {
   const [manual, setManual] = useState<ManualMap>({})
   const evals = useMemo(() => (a.evidence ? autoEvaluate(a.evidence) : []), [a.evidence])
   const result = useMemo(() => scoreSmall(evals, manual), [evals, manual])
+  const buildReport = useCallback(() => buildSmallReport(a, result, manual, input), [a, result, manual, input])
   const tc = a.evidence?.transcript
   const pop = a.evidence?.population
 
@@ -125,6 +128,8 @@ export function SmallResultView({ a }: { a: SmallAnalysis }) {
             <span className="muted">病的 +{result.pathogenicPoints} / 良性 {result.benignPoints}</span>
             {result.notEvaluable.length > 0 && <span className="provisional">暫定</span>}
           </div>
+
+          <ReportButtons build={buildReport} filename={`variant-report-${a.allele?.caid ?? 'small'}`} />
 
           <p className="brief">
             {consequence}

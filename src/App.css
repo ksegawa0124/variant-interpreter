@@ -155,3 +155,6 @@ summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
 .band { stroke: none; }
 .b-gneg { fill: #f3f4f6; } .b-gpos25 { fill: #cbd0d6; } .b-gpos50 { fill: #9aa1aa; } .b-gpos75 { fill: #6b727c; } .b-gpos100 { fill: #3f444b; }
 .b-acen { fill: #b91c1c88; } .b-gvar { fill: #d1d5db; } .b-stalk { fill: #9ca3af; }
+
+.report-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.75rem 0; }
+.report-buttons .warn { flex-basis: 100%; margin: 0; }

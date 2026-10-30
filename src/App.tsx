@@ -69,7 +69,7 @@ function App() {
             設定
           </button>
         </div>
-        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 8）</p>
+        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 9）</p>
 
         <form
           className="home-form"
@@ -154,7 +154,7 @@ function App() {
         )}
 
         {busy && <p className="muted" role="status">解析中…（外部 API を呼び出しています）</p>}
-        {submitted && !busy && route.engine === 'small' && analysis && <SmallResultView key={submitted} a={analysis} />}
+        {submitted && !busy && route.engine === 'small' && analysis && <SmallResultView key={submitted} a={analysis} input={submitted} />}
         {cnvError && <p className="warn" role="alert">⚠ {cnvError}</p>}
         {submitted && !busy && route.engine === 'cnv' && cnv && <CnvResultView key={submitted} a={cnv} />}
         {submitted && !busy && route.engine !== 'small' && route.engine !== 'cnv' && route.engine !== 'invalid' && (
