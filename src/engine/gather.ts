@@ -3,6 +3,7 @@
 import { fetchAlleleByCaid, fetchAlleleByHgvs, fetchAllelesByRsId, genomicHgvs, type RegistryAllele } from '../api/alleleRegistry.ts'
 import { fetchClinvarCodon } from '../api/clinvarCodon.ts'
 import { fetchErepo, type ErepoClassification } from '../api/erepo.ts'
+import { fetchSpliceAi, spliceAiVariant } from '../api/spliceai.ts'
 import { fetchTranscriptView, type TranscriptView } from '../api/ensemblViz.ts'
 import type { SourceResult } from '../api/http.ts'
 import { fetchMyVariant, fetchMyVariantVersion, type MyVariantResult } from '../api/myvariant.ts'
@@ -137,7 +138,22 @@ export async function analyzeSmall(p: ParsedInput, genome: Genome, geneHint?: st
     }
   }
 
-  const pc =parseProteinChange(choice?.tc.hgvsp)
+  // SpliceAI は BP7（同義置換）の判定にだけ使う。公開 API の利用上限に配慮し、それ以外の変異型では呼ばない
+  let splice: SourceResult<{ maxDelta: number }> = {
+    status: 'failed', source: 'SpliceAI lookup (Broad)', url: '', fetchedAt: new Date().toISOString(), error: 'この変異型ではスプライス予測を取得していません',
+  }
+  if (choice?.tc.consequenceTerms.includes('synonymous_variant')) {
+    const sv = chrom ? spliceAiVariant(chrom, g) : null
+    if (sv) {
+      const sp = await fetchSpliceAi(effGenome, sv)
+      splice = sp
+      out.sources.push(rec(sp, sp.status === 'ok' ? `SpliceAI（Broad lookup）distance ${sp.data.distance}, mask 0${sp.data.source ? `, ${sp.data.source}` : ''}` : null))
+    } else {
+      splice = { ...splice, error: 'SNV 以外の同義置換は SpliceAI 照会に未対応です' }
+    }
+  }
+
+  const pc = parseProteinChange(choice?.tc.hgvsp)
   const codon: SourceResult<import('./small.ts').ClinvarCodonVariant[]> =
     pc && geneSym
       ? await fetchClinvarCodon(geneSym, pc.ref, pc.pos, effGenome === 'GRCh38' ? 'hg38' : 'hg19')
@@ -157,7 +173,7 @@ export async function analyzeSmall(p: ParsedInput, genome: Genome, geneHint?: st
     revel: mvRes.status === 'ok'
       ? { ...mvRes, data: mvRes.data.dbnsfp.revel }
       : mvRes.error && NOT_FOUND.test(mvRes.error) ? { ...mvRes, status: 'ok', data: undefined } : mvRes,
-    splice: { status: 'failed', source: 'SpliceAI', url: '', fetchedAt: new Date().toISOString(), error: 'SpliceAI は未接続（CORS 未検証）' },
+    splice,
     clinvarCodon: codon,
     dosage,
     cspec,

@@ -191,7 +191,7 @@ function evalPM2(ev: SmallEvidence): CodeEvaluation {
 function evalInSilico(id: 'PP3' | 'BP4', ev: SmallEvidence): CodeEvaluation {
   const e = base(id)
   e.sources = ['REVEL (MyVariant.info / dbNSFP)']
-  if (!isMissense(ev.transcript)) return { ...e, state: 'not_applicable', reason: 'ミスセンス以外には適用しない（スプライス予測は未接続）' }
+  if (!isMissense(ev.transcript)) return { ...e, state: 'not_applicable', reason: 'ミスセンス以外には適用しない（スプライス変異への PP3 は未対応。SpliceAI は BP7 のみに使用）' }
   if (ev.revel.status === 'failed') return { ...e, state: 'not_evaluable', reason: failedReason(ev.revel) }
   const r = ev.revel.data
   if (r === undefined) return { ...e, state: 'no_evidence', reason: 'REVEL スコアなし' }
