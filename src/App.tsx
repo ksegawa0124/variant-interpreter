@@ -69,7 +69,7 @@ function App() {
             設定
           </button>
         </div>
-        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 7）</p>
+        <p>ClinGen 公開リソースに基づく遺伝子バリアント解釈支援（開発中: Phase 8）</p>
 
         <form
           className="home-form"

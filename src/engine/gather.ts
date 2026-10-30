@@ -3,6 +3,7 @@
 import { fetchAlleleByCaid, fetchAlleleByHgvs, fetchAllelesByRsId, genomicHgvs, type RegistryAllele } from '../api/alleleRegistry.ts'
 import { fetchClinvarCodon } from '../api/clinvarCodon.ts'
 import { fetchErepo, type ErepoClassification } from '../api/erepo.ts'
+import { fetchTranscriptView, type TranscriptView } from '../api/ensemblViz.ts'
 import type { SourceResult } from '../api/http.ts'
 import { fetchMyVariant, fetchMyVariantVersion, type MyVariantResult } from '../api/myvariant.ts'
 import { fetchEnsemblRelease, fetchVepByHgvs, type VepResult } from '../api/vep.ts'
@@ -33,6 +34,8 @@ export interface SmallAnalysis {
   evidence: SmallEvidence | null
   /** ERepo の専門家パネル分類（ない場合は ok で空配列） */
   erepo?: SourceResult<ErepoClassification[]>
+  /** エクソン構造・ドメイン（可視化用） */
+  view?: SourceResult<TranscriptView & { domainError?: string }>
   sources: SourceRecord[]
   /** 解析を続行できなかった理由 */
   fatal?: string
@@ -125,7 +128,16 @@ export async function analyzeSmall(p: ParsedInput, genome: Genome, geneHint?: st
   out.choice = choice
   const geneSym = choice?.tc.geneSymbol ?? gene
 
-  const pc = parseProteinChange(choice?.tc.hgvsp)
+  // 可視化用（失敗しても判定には影響しない）
+  if (choice) {
+    out.view = await fetchTranscriptView(choice.tc.transcriptId, effGenome)
+    out.sources.push(rec(out.view, ensRel.status === 'ok' ? `Ensembl release ${ensRel.data.release}` : null))
+    if (out.view.status === 'ok' && out.view.data.domainError) {
+      out.sources.push({ name: 'Ensembl protein features', status: 'failed', fetchedAt: out.view.fetchedAt, url: '', version: null, error: out.view.data.domainError })
+    }
+  }
+
+  const pc =parseProteinChange(choice?.tc.hgvsp)
   const codon: SourceResult<import('./small.ts').ClinvarCodonVariant[]> =
     pc && geneSym
       ? await fetchClinvarCodon(geneSym, pc.ref, pc.pos, effGenome === 'GRCh38' ? 'hg38' : 'hg19')

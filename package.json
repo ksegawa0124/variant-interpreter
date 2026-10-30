@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "verify:apis": "node scripts/verify-apis.ts",
-    "validate:erepo": "node scripts/validate-erepo.ts",
+    "validate:erepo": "node --import ./scripts/register-json.ts scripts/validate-erepo.ts",
     "build:data": "node scripts/build-reference-data.ts"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PM1_DOMAIN_DBS, SMALL_CODES, STRENGTH_LABEL, STRENGTH_POINTS, THRESHOLDS, type Strength } from './engine/rules.ts'
 import { ErepoPanel } from './ErepoPanel.tsx'
+import { TranscriptViz } from './viz/TranscriptViz.tsx'
 import type { SmallAnalysis } from './engine/gather.ts'
 import { autoEvaluate, scoreSmall, type CodeEvaluation, type EvalState, type ManualMap } from './engine/small.ts'
 
@@ -131,6 +132,15 @@ export function SmallResultView({ a }: { a: SmallAnalysis }) {
             {domainNames.length ? `　ドメイン: ${domainNames.join(', ')}` : ''}
             {freq ? `　${freq}` : ''}
           </p>
+
+          {a.view?.status === 'ok' && (
+            <TranscriptViz
+              view={a.view.data} domainError={a.view.data.domainError}
+              variantPos={Number(/g\.(\d+)/.exec(a.genomicHgvs ?? '')?.[1]) || undefined}
+              proteinPos={tc?.proteinStart}
+            />
+          )}
+          {a.view?.status === 'failed' && <p className="warn">⚠ エクソン構造の取得に失敗したため図を表示できません（{a.view.error}）。</p>}
 
           {result.warnings.map((w) => (
             <p key={w} className="warn">⚠ {w}</p>

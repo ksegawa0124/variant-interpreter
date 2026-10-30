@@ -1,6 +1,7 @@
 // CNV 入力 → Ensembl（遺伝子一覧・遺伝子構造）+ 同梱 ClinGen データ → CnvEvidence
 import { createRateLimiter, wrapSource, type SourceResult } from '../api/http.ts'
 import { ENSEMBL_BASE, fetchEnsemblRelease } from '../api/vep.ts'
+import { fetchChromosome, type ChromosomeView } from '../api/ensemblViz.ts'
 import { loadDosageGenes, loadDosageRegions, loadValidity } from '../data/reference.ts'
 import { normalizeChrom, type Genome, type ParsedInput } from '../input/parseInput.ts'
 import type { SourceRecord } from '../engine/gather.ts'
@@ -84,13 +85,16 @@ const rec = (r: SourceResult<unknown>, version: string | null): SourceRecord => 
 
 export interface CnvAnalysis {
   genome: Genome
+  /** 染色体バンド（可視化用。失敗しても判定には影響しない） */
+  chromosome: SourceResult<ChromosomeView>
   evidence: CnvEvidence
   sources: SourceRecord[]
 }
 
 export async function analyzeCnv(region: CnvRegion, genome: Genome): Promise<CnvAnalysis> {
-  const [genes, dg, dr, val, rel] = await Promise.all([
+  const [genes, dg, dr, val, rel, chromosome] = await Promise.all([
     fetchGenes(region, genome), loadDosageGenes(genome), loadDosageRegions(genome), loadValidity(), fetchEnsemblRelease(genome),
+    fetchChromosome(region.chrom, genome),
   ])
   // 部分重複する確立 HI 遺伝子（LOSS のみ）の構造を取得する
   const structures: CnvEvidence['structures'] = {}
@@ -104,7 +108,8 @@ export async function analyzeCnv(region: CnvRegion, genome: Genome): Promise<Cnv
     rec(genes, ens), rec(dg, ver(dg)), rec(dr, ver(dr)),
     rec(val, val.status === 'ok' ? `${val.data.meta.version ?? '版不明'}（取得 ${val.data.meta.fetchedAt.slice(0, 10)}）` : null),
     ...Object.values(structures).map((s) => rec(s, ens)),
+    rec(chromosome, ens),
     ...(rel.status === 'failed' ? [rec(rel, null)] : []),
   ]
-  return { genome, evidence: { region, genes, dosageGenes: dg, dosageRegions: dr, validity: val, structures }, sources }
+  return { genome, chromosome, evidence: { region, genes, dosageGenes: dg, dosageRegions: dr, validity: val, structures }, sources }
 }

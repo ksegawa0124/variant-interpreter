@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { autoEvaluateCnv, formatCnvPoints, scoreCnv, type CnvItemEval, type CnvManualMap } from './cnv/engine.ts'
 import type { CnvAnalysis } from './cnv/gather.ts'
+import { CnvViz } from './viz/CnvViz.tsx'
 import { CNV_CLASSES, CNV_ITEMS, INTRAGENIC_OPTIONS, cnvItemsFor } from './cnv/rules.ts'
 
 const CLASS_JA = { Pathogenic: '病的', 'Likely Pathogenic': '病的の可能性が高い', VUS: '意義不明', 'Likely Benign': '良性の可能性が高い', Benign: '良性' } as const
@@ -73,6 +74,12 @@ export function CnvResultView({ a }: { a: CnvAnalysis }) {
   const type = region.type
   const countedBy = (key: string) => r.counted.find((c) => c.key === key)?.points
   const len = region.end - region.start + 1
+  const overlappingRegions = useMemo(
+    () => (a.evidence.dosageRegions.status === 'ok'
+      ? a.evidence.dosageRegions.data.entries.filter((e) => e.chrom === region.chrom && e.end >= region.start && e.start <= region.end)
+      : []),
+    [a.evidence.dosageRegions, region],
+  )
 
   const geneRows = useMemo(() => {
     const annotated = (g: (typeof r.genes)[number]) => (g.hi != null || g.ts != null ? 0 : g.gdv ? 1 : 2)
@@ -103,6 +110,12 @@ export function CnvResultView({ a }: { a: CnvAnalysis }) {
         分類境界: {CNV_CLASSES.map((c) => `${c.label} ${Number.isFinite(c.min) ? formatCnvPoints(c.min) : '…'}〜${Number.isFinite(c.max) ? formatCnvPoints(c.max) : '…'}`).join(' / ')}
       </p>
       {r.warnings.map((w) => <p key={w} className="warn">⚠ {w}</p>)}
+
+      <CnvViz
+        region={{ ...region, type }} genes={r.genes} dosageRegions={overlappingRegions}
+        chromosome={a.chromosome.status === 'ok' ? a.chromosome.data : undefined}
+        chromError={a.chromosome.status === 'failed' ? a.chromosome.error : undefined}
+      />
 
       {[1, 2, 3].map((s) => (
         <div key={s}>

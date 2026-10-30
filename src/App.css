@@ -131,3 +131,27 @@ summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
 .erepo h3 { margin: 0.25rem 0; }
 .erepo-card + .erepo-card { border-top: 1px solid #8884; margin-top: 0.5rem; padding-top: 0.5rem; }
 .chip { display: inline-block; padding: 0 0.5rem; margin: 0 0.25rem 0.25rem 0; border: 1px solid #8886; border-radius: 999px; font-size: 0.85em; }
+
+.viz { margin: 1rem 0; }
+.viz figcaption { font-size: 0.9em; margin-bottom: 0.25rem; }
+.viz svg { width: 100%; height: auto; display: block; }
+.viz-axis { stroke: #8888; stroke-width: 1; }
+.viz-utr { fill: #8896; }
+.viz-cds { fill: #2563eb; }
+.viz-label { font-size: 9px; fill: currentColor; }
+.viz-variant { stroke: #dc2626; stroke-width: 1.5; }
+.viz-variant-dot { fill: #dc2626; }
+.viz-protein { fill: #8896; }
+.viz-legend { font-size: 0.8em; margin: 0.25rem 0; display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; align-items: center; }
+.viz-legend .sw { display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.3em; border-radius: 2px; vertical-align: -0.05em; }
+.sw.cds { background: #2563eb; } .sw.utr { background: #8896; } .sw.var { background: #dc2626; }
+.legend-item { display: inline-flex; align-items: center; }
+.g-established { fill: #dc2626; background: #dc2626; }
+.g-annotated { fill: #2563eb; background: #2563eb; }
+.g-plain { fill: #8899; background: #8899; }
+.cnv-loss { fill: #dc2626; } .cnv-gain { fill: #16a34a; }
+.region-mark { fill: #dc262655; stroke: #dc2626; stroke-width: 1; }
+.chr-outline { fill: none; stroke: #888; stroke-width: 1; }
+.band { stroke: none; }
+.b-gneg { fill: #f3f4f6; } .b-gpos25 { fill: #cbd0d6; } .b-gpos50 { fill: #9aa1aa; } .b-gpos75 { fill: #6b727c; } .b-gpos100 { fill: #3f444b; }
+.b-acen { fill: #b91c1c88; } .b-gvar { fill: #d1d5db; } .b-stalk { fill: #9ca3af; }
