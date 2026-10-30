@@ -158,3 +158,8 @@ summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
 
 .report-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.75rem 0; }
 .report-buttons .warn { flex-basis: 100%; margin: 0; }
+
+.source-links { font-size: 0.8em; margin: 0.25rem 0 0; }
+.change-table { border-collapse: collapse; font-size: 0.85em; margin: 0.5rem 0; }
+.change-table th, .change-table td { border: 1px solid #8884; padding: 0.15rem 0.6rem; text-align: left; }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; }

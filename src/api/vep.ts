@@ -23,6 +23,8 @@ export interface VepTranscriptConsequence {
   intron?: string
   proteinStart?: number
   aminoAcids?: string
+  /** 例: "Cgg/Tgg"（変化した塩基が大文字） */
+  codons?: string
   domains: Array<{ db: string; name: string }>
 }
 
@@ -46,6 +48,7 @@ interface RawTc {
   intron?: string
   protein_start?: number
   amino_acids?: string
+  codons?: string
   domains?: Array<{ db: string; name: string }>
 }
 
@@ -75,6 +78,7 @@ export function parseVep(raw: unknown): VepResult {
       intron: t.intron,
       proteinStart: t.protein_start,
       aminoAcids: t.amino_acids,
+      codons: t.codons,
       domains: t.domains ?? [],
     })),
   }

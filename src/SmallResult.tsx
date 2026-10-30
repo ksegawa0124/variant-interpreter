@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { sourceLinks, type SourceLink } from './sourceLinks.ts'
 import { ReportButtons } from './report/ReportButtons.tsx'
 import { buildSmallReport } from './report/report.ts'
 import { PM1_DOMAIN_DBS, SMALL_CODES, STRENGTH_LABEL, STRENGTH_POINTS, THRESHOLDS, type Strength } from './engine/rules.ts'
@@ -49,7 +50,7 @@ function ManualControl({ ev, manual, onChange }: { ev: CodeEvaluation; manual: M
   )
 }
 
-function CodeCard({ ev, points, counted, manual, onChange }: { ev: CodeEvaluation; points: number; counted: boolean; manual: ManualMap; onChange: (m: ManualMap) => void }) {
+function CodeCard({ ev, points, counted, manual, onChange, links }: { ev: CodeEvaluation; points: number; counted: boolean; manual: ManualMap; onChange: (m: ManualMap) => void; links: SourceLink[] }) {
   const def = SMALL_CODES.find((c) => c.id === ev.id)!
   const interactive = !ev.vcepNotApplicable && (ev.state === 'candidate' || ev.state === 'manual')
   return (
@@ -73,6 +74,9 @@ function CodeCard({ ev, points, counted, manual, onChange }: { ev: CodeEvaluatio
       {ev.notes.map((n) => (
         <p key={n} className="note">{n}</p>
       ))}
+      {links.length > 0 && (
+        <p className="source-links">出典: {links.map((l, i) => <span key={l.href}>{i > 0 && ' / '}<a href={l.href} target="_blank" rel="noreferrer">{l.label}</a></span>)}</p>
+      )}
       {interactive && <ManualControl ev={ev} manual={manual} onChange={onChange} />}
     </article>
   )
@@ -143,6 +147,7 @@ export function SmallResultView({ a, input }: { a: SmallAnalysis; input: string 
               view={a.view.data} domainError={a.view.data.domainError}
               variantPos={Number(/g\.(\d+)/.exec(a.genomicHgvs ?? '')?.[1]) || undefined}
               proteinPos={tc?.proteinStart}
+              change={tc ? { hgvsc: tc.hgvsc, hgvsp: tc.hgvsp, codons: tc.codons, aminoAcids: tc.aminoAcids } : undefined}
             />
           )}
           {a.view?.status === 'failed' && <p className="warn">⚠ エクソン構造の取得に失敗したため図を表示できません（{a.view.error}）。</p>}
@@ -160,7 +165,7 @@ export function SmallResultView({ a, input }: { a: SmallAnalysis; input: string 
           <div className="cards">
             {result.evaluations.map((ev) => {
               const s = result.scored.find((x) => x.id === ev.id)!
-              return <CodeCard key={ev.id} ev={ev} points={s.points} counted={s.counted} manual={manual} onChange={setManual} />
+              return <CodeCard key={ev.id} ev={ev} points={s.points} counted={s.counted} manual={manual} onChange={setManual} links={sourceLinks(ev, a)} />
             })}
           </div>
         </>

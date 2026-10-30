@@ -86,5 +86,12 @@ export function layoutExons(
   return { boxes, width: total, xOf, exonAt }
 }
 
+/** VEP の "ref/alt"（codons / amino_acids）を分解する。alt が無い（同一/同義）場合は alt = ref。 */
+export function splitPair(s?: string): { ref: string; alt: string } | null {
+  if (!s) return null
+  const [ref, alt] = s.split('/')
+  return { ref, alt: alt ?? ref }
+}
+
 /** 線形スケール: [a,b] → [0,width] */
 export const linear = (a: number, b: number, width: number) => (v: number) => ((v - a) / Math.max(1, b - a)) * width

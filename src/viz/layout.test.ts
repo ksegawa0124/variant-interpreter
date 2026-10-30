@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseBands, parseFeatures, parseTranscript } from '../api/ensemblViz.ts'
-import { layoutExons, linear } from './layout.ts'
+import { layoutExons, linear, splitPair } from './layout.ts'
 
 const exons = [{ start: 100, end: 199 }, { start: 1000, end: 1099 }, { start: 5000, end: 5199 }]
 
@@ -79,6 +79,11 @@ describe('Ensembl 応答のパース', () => {
     const c = parseBands({ length: 100, karyotype_band: [{ id: 'q11', start: 50, end: 100, stain: 'gneg' }, { id: 'p11', start: 1, end: 49, stain: 'acen' }] }, '22')
     expect(c.bands.map((b) => b.name)).toEqual(['p11', 'q11'])
     expect(() => parseBands({}, '1')).toThrow()
+  })
+  it('splitPair: codons / amino_acids', () => {
+    expect(splitPair('Cgg/Tgg')).toEqual({ ref: 'Cgg', alt: 'Tgg' })
+    expect(splitPair('R')).toEqual({ ref: 'R', alt: 'R' })
+    expect(splitPair(undefined)).toBeNull()
   })
   it('linear', () => {
     expect(linear(0, 100, 200)(50)).toBe(100)

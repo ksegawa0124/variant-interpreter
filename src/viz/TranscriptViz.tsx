@@ -1,14 +1,17 @@
 import { useMemo } from 'react'
 import type { TranscriptView } from '../api/ensemblViz.ts'
-import { layoutExons, linear } from './layout.ts'
+import { layoutExons, linear, splitPair } from './layout.ts'
 
 const W = 720
 const DOMAIN_COLORS = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#db2777', '#0891b2']
 
 /** エクソン構造（イントロン圧縮）とタンパク質ドメイン上のバリアント位置。 */
-export function TranscriptViz({ view, variantPos, proteinPos, domainError }: {
+export function TranscriptViz({ view, variantPos, proteinPos, domainError, change }: {
   view: TranscriptView; variantPos?: number; proteinPos?: number; domainError?: string
+  change?: { hgvsc?: string; hgvsp?: string; codons?: string; aminoAcids?: string }
 }) {
+  const codon = splitPair(change?.codons)
+  const aa = splitPair(change?.aminoAcids)
   const lay = useMemo(() => layoutExons(view.exons, view.strand, W - 20, { start: view.cdsStart, end: view.cdsEnd }), [view])
   const vx = variantPos !== undefined ? lay.xOf(variantPos) : null
   const inExon = variantPos !== undefined && lay.exonAt(variantPos) !== null
@@ -78,6 +81,16 @@ export function TranscriptViz({ view, variantPos, proteinPos, domainError }: {
           </p>
           {!view.features.length && !domainError && <p className="muted">Pfam / PROSITE / SMART に登録されたドメインはありません。</p>}
         </>
+      )}
+      {change && (change.hgvsc || change.hgvsp) && (
+        <table className="change-table" aria-label="配列の変化">
+          <thead><tr><th /><th>DNA（コドン）</th><th>アミノ酸</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">参照</th><td className="mono">{codon?.ref ?? '—'}</td><td className="mono">{aa?.ref ?? '—'}</td></tr>
+            <tr><th scope="row">変化後</th><td className="mono">{codon?.alt ?? '—'}</td><td className="mono">{aa?.alt ?? '—'}</td></tr>
+            <tr><th scope="row">HGVS</th><td className="mono">{change.hgvsc?.split(':').pop() ?? '—'}</td><td className="mono">{change.hgvsp?.split(':').pop() ?? '—'}</td></tr>
+          </tbody>
+        </table>
       )}
       {domainError && <p className="warn">⚠ タンパク質ドメインの取得に失敗しました（{domainError}）。エクソン構造のみ表示しています。</p>}
     </figure>
