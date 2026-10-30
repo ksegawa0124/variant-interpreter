@@ -49,7 +49,8 @@ const NOT_FOUND = /HTTP 404|該当バリアントなし/
 export function populationFrom(mv: SourceResult<MyVariantResult>, gnomadVersion?: string): SourceResult<PopulationData> {
   if (mv.status === 'ok') {
     const g = mv.data.gnomad
-    return { ...mv, data: g.source === 'none' || !g.overall ? { present: false, dataset: 'gnomAD', version: gnomadVersion } : { present: true, ...g.overall, dataset: g.source, version: gnomadVersion } }
+    const pm = mv.data.popmax
+    return { ...mv, data: g.source === 'none' || !g.overall ? { present: false, dataset: 'gnomAD', version: gnomadVersion } : { present: true, ...g.overall, popmaxAf: pm?.af, popmaxPop: pm ? `${pm.pop}/${pm.dataset}` : undefined, dataset: g.source, version: gnomadVersion } }
   }
   if (NOT_FOUND.test(mv.error)) return { ...mv, status: 'ok', data: { present: false, dataset: 'gnomAD', version: gnomadVersion } }
   return mv

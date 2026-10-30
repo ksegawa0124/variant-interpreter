@@ -15,6 +15,8 @@ export interface MyVariantResult {
   clinvar?: { variationId?: number; significance?: string; reviewStatus?: string; release?: string }
   /** gnomAD の取得元（インデックス名）。頻度系コードの表示に必ず併記する。 */
   gnomad: { source: 'gnomad_genome' | 'gnomad_exome' | 'none'; overall?: PopFreq }
+  /** ゲノム/エクソームを通じた大陸別集団の最大頻度 */
+  popmax?: { af: number; pop: string; dataset: string }
   dbnsfp: { revel?: number; cadd?: number }
   raw: Record<string, unknown>
 }
@@ -42,6 +44,19 @@ const num = (v: unknown): number | undefined => {
 const first = <T>(v: T | T[] | undefined): T | undefined => (Array.isArray(v) ? v[0] : v)
 
 type Obj = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** ClinGen の頻度基準で使う大陸別集団。ASJ・FIN・oth・ami・mid は除く（ボトルネック/不均一のため）。 */
+const POPMAX_POPS = ['afr', 'amr', 'eas', 'nfe', 'sas'] as const
+
+export function popmax(o: Obj | undefined): { af: number; pop: string } | undefined {
+  if (!o || typeof o.af !== 'object') return undefined
+  let best: { af: number; pop: string } | undefined
+  for (const p of POPMAX_POPS) {
+    const v = num(o.af[`af_${p}`])
+    if (v !== undefined && (!best || v > best.af)) best = { af: v, pop: p }
+  }
+  return best
+}
 
 function pop(o: Obj | undefined): PopFreq | undefined {
   if (!o) return undefined
@@ -72,6 +87,10 @@ export function parseMyVariant(raw: unknown): MyVariantResult {
       : exome?.af !== undefined
         ? { source: 'gnomad_exome', overall: exome }
         : { source: 'none' },
+    popmax: [
+      ...(popmax(r.gnomad_genome) ? [{ ...popmax(r.gnomad_genome)!, dataset: 'gnomad_genome' }] : []),
+      ...(popmax(r.gnomad_exome) ? [{ ...popmax(r.gnomad_exome)!, dataset: 'gnomad_exome' }] : []),
+    ].sort((a, b) => b.af - a.af)[0],
     dbnsfp: { revel: num(r.dbnsfp?.revel?.score), cadd: num(r.cadd?.phred) },
     raw: r,
   }

@@ -54,6 +54,14 @@ describe('頻度コード', () => {
     expect(state(pop(0.02), 'BA1').state).toBe('not_met')
     expect(state(pop(0.005), 'BS1').state).toBe('not_met')
   })
+  it('集団最大頻度が全体頻度より高ければ、BA1/BS1/PM2 は集団最大頻度で判定する', () => {
+    const p = (popmaxAf: number) => evidence({ population: ok('gnomAD', { present: true, af: 0.00005, popmaxAf, popmaxPop: 'afr/gnomad_genome', dataset: 'gnomad_genome', version: '2.1.1' }) })
+    expect(state(p(0.02), 'BS1')).toMatchObject({ state: 'met' })
+    expect(state(p(0.02), 'BS1').reason).toContain('afr')
+    expect(state(p(0.06), 'BA1').state).toBe('met')
+    expect(state(p(0.001), 'PM2').state).toBe('not_met') // 全体は 0.00005 でも afr が 0.1%
+    expect(state(p(0.00001), 'PM2').state).toBe('met')
+  })
   it('PM2: 不在 or 低頻度で Supporting', () => {
     expect(state(evidence(), 'PM2')).toMatchObject({ state: 'met', strength: 'supporting' })
     expect(state(pop(0.00005), 'PM2').state).toBe('met')
@@ -190,6 +198,12 @@ describe('CSpec(VCEP) による上書き', () => {
     const e = state(evidence({ cspec: [doc({ BA1: ['Stand Alone'] })] }), 'BA1')
     expect(e.override).toMatchObject({ kind: 'threshold_unverified' })
     expect(e.notes.join()).toContain('0.1%')
+  })
+  it('VCEP がある遺伝子の PM1 はドメイン内でも自動採点せず候補にする', () => {
+    const ev = evidence({ transcript: tc({ domains: [{ db: 'Pfam', name: 'PF1' }] }), cspec: [doc({ PM2: ['Supporting'] })] })
+    expect(state(ev, 'PM1').state).toBe('candidate')
+    const r = scoreSmall(autoEvaluate(ev))
+    expect(r.scored.find((s) => s.id === 'PM1')).toMatchObject({ counted: false })
   })
   it('許容強度のうち元の強度に最も近いものへ寄せる（強くしすぎない）', () => {
     const ev = (revel: number) => evidence({ revel: ok('REVEL', revel), cspec: [doc({ PP3: ['Supporting', 'Moderate'] })] })

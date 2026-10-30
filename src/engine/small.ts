@@ -15,6 +15,9 @@ export interface PopulationData {
   /** gnomAD に該当バリアントがあったか */
   present: boolean
   af?: number
+  /** 大陸別集団（afr/amr/eas/nfe/sas）の最大頻度。BA1/BS1/PM2 の判定に使う */
+  popmaxAf?: number
+  popmaxPop?: string
   hom?: number
   an?: number
   /** 例: gnomad_genome */
@@ -119,7 +122,14 @@ function freqNote(p: PopulationData): string[] {
   return [`gnomAD ${p.version ? 'v' + p.version : '版不明'}（${p.dataset}）`]
 }
 
-const THREE = /^p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|=|Ter|\*)/
+/** 頻度コードの判定に使う値: 全体頻度と集団最大頻度のうち高い方（集団最大が高ければ集団名を併記）。 */
+function maxFreq(p: PopulationData): { af: number; label: string } {
+  const overall = p.af ?? 0
+  if (p.popmaxAf !== undefined && p.popmaxAf > overall) return { af: p.popmaxAf, label: `集団最大頻度（${p.popmaxPop}）` }
+  return { af: overall, label: '頻度' }
+}
+
+const THREE =/^p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|=|Ter|\*)/
 
 /** VEP の hgvsp（"ENSP…:p.Arg248Gln"）からミスセンス変化を取り出す。 */
 export function parseProteinChange(hgvsp?: string): { ref: string; pos: number; alt: string } | null {
@@ -147,8 +157,9 @@ function evalFreq(id: 'BA1' | 'BS1', ev: SmallEvidence, threshold: number): Code
   const p = ev.population.data
   e.notes = freqNote(p)
   if (!p.present || p.af === undefined) return { ...e, state: 'not_met', reason: 'gnomAD に記載なし（頻度 0 扱い）' }
-  const met = p.af >= threshold
-  return { ...e, state: met ? 'met' : 'not_met', reason: `頻度 ${fmtAf(p.af)}（${pct(p.af)}）${met ? '≥' : '<'} 閾値 ${threshold}` }
+  const f = maxFreq(p)
+  const met = f.af >= threshold
+  return { ...e, state: met ? 'met' : 'not_met', reason: `${f.label} ${fmtAf(f.af)}（${pct(f.af)}）${met ? '≥' : '<'} 閾値 ${threshold}` }
 }
 
 function evalBS2(ev: SmallEvidence): CodeEvaluation {
@@ -172,8 +183,9 @@ function evalPM2(ev: SmallEvidence): CodeEvaluation {
   if (!p.present || p.af === undefined) {
     return { ...e, state: 'met', reason: 'gnomAD に不在', notes: [...e.notes, '不在は当該部位のカバレッジが十分である前提。深度は未確認'] }
   }
-  const met = p.af <= THRESHOLDS.pm2Af
-  return { ...e, state: met ? 'met' : 'not_met', reason: `頻度 ${fmtAf(p.af)} ${met ? '≤' : '>'} 閾値 ${THRESHOLDS.pm2Af}` }
+  const f = maxFreq(p)
+  const met = f.af <= THRESHOLDS.pm2Af
+  return { ...e, state: met ? 'met' : 'not_met', reason: `${f.label} ${fmtAf(f.af)} ${met ? '≤' : '>'} 閾値 ${THRESHOLDS.pm2Af}` }
 }
 
 function evalInSilico(id: 'PP3' | 'BP4', ev: SmallEvidence): CodeEvaluation {
@@ -214,7 +226,12 @@ function evalPM1(ev: SmallEvidence): CodeEvaluation {
   if (!isMissense(ev.transcript)) return { ...e, state: 'not_applicable', reason: 'ミスセンス以外には適用しない' }
   const doms = (ev.transcript?.domains ?? []).filter((d) => PM1_DOMAIN_DBS.includes(d.db))
   if (!doms.length) return { ...e, state: 'not_met', reason: '注釈された機能ドメイン内ではない' }
-  return { ...e, state: 'met', reason: `ドメイン内: ${doms.map((d) => `${d.db}:${d.name}`).join(', ')}`, notes: ['ホットスポット/VCEP 仕様のドメイン定義は未検証'] }
+  const reason = `ドメイン内: ${doms.map((d) => `${d.db}:${d.name}`).join(', ')}`
+  // VCEP がある遺伝子の PM1 は、仕様が定める特定の残基/領域でのみ成立する。Pfam 等のドメイン内というだけでは自動採用しない
+  if (ev.cspec.length) {
+    return { ...e, state: 'candidate', reason, notes: ['VCEP 仕様がある遺伝子のため、PM1 は仕様の定める領域に該当するか確認のうえ採用してください（自動では採点しません）'] }
+  }
+  return { ...e, state: 'met', reason, notes: ['ホットスポット定義は未検証（ドメイン内のみで判定）'] }
 }
 
 function evalCodon(id: 'PS1' | 'PM5', ev: SmallEvidence, ps1Met: boolean): CodeEvaluation {
