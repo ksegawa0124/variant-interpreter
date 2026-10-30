@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PM1_DOMAIN_DBS, SMALL_CODES, STRENGTH_LABEL, STRENGTH_POINTS, THRESHOLDS, type Strength } from './engine/rules.ts'
+import { ErepoPanel } from './ErepoPanel.tsx'
 import type { SmallAnalysis } from './engine/gather.ts'
 import { autoEvaluate, scoreSmall, type CodeEvaluation, type EvalState, type ManualMap } from './engine/small.ts'
 
@@ -107,11 +108,14 @@ export function SmallResultView({ a }: { a: SmallAnalysis }) {
         </dl>
       </div>
 
-      {a.alleleCandidates > 1 && <p className="warn">⚠ 入力に対応するアレルが {a.alleleCandidates} 件あります。先頭の {a.allele?.caid} を使用しています（多アレル部位は HGVS で指定してください）</p>}
+      <ErepoPanel erepo={a.erepo} auto={a.evidence ? result.classification : undefined} />
+
+      {a.alleleCandidates > 1 &&<p className="warn">⚠ 入力に対応するアレルが {a.alleleCandidates} 件あります。先頭の {a.allele?.caid} を使用しています（多アレル部位は HGVS で指定してください）</p>}
       {a.fatal && <p className="warn" role="alert">⚠ {a.fatal}</p>}
 
       {a.evidence && (
         <>
+          {a.erepo?.status === 'ok' && a.erepo.data.length > 0 && <p className="muted">以下は本アプリの自動判定（参考）です。専門家パネルの分類が優先されます。</p>}
           <div className="verdict">
             <span className={`badge badge-${CLASS_KEY[result.classification]}`}>
               {result.classification}（{CLASS_JA[result.classification]}）

@@ -126,3 +126,8 @@ button {
 .sources.genes td, .sources.genes th { white-space: nowrap; }
 details { margin: 12px 0; }
 summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+
+.erepo { border: 2px solid #1d4ed8; border-radius: 8px; padding: 0.5rem 1rem; margin: 1rem 0; background: color-mix(in srgb, #1d4ed8 8%, transparent); }
+.erepo h3 { margin: 0.25rem 0; }
+.erepo-card + .erepo-card { border-top: 1px solid #8884; margin-top: 0.5rem; padding-top: 0.5rem; }
+.chip { display: inline-block; padding: 0 0.5rem; margin: 0 0.25rem 0.25rem 0; border: 1px solid #8886; border-radius: 999px; font-size: 0.85em; }

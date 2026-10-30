@@ -2,6 +2,7 @@
 // 各ソースの失敗はそのソースだけに閉じ込め、依存するコードを「評価不可」にする。
 import { fetchAlleleByCaid, fetchAlleleByHgvs, fetchAllelesByRsId, genomicHgvs, type RegistryAllele } from '../api/alleleRegistry.ts'
 import { fetchClinvarCodon } from '../api/clinvarCodon.ts'
+import { fetchErepo, type ErepoClassification } from '../api/erepo.ts'
 import type { SourceResult } from '../api/http.ts'
 import { fetchMyVariant, fetchMyVariantVersion, type MyVariantResult } from '../api/myvariant.ts'
 import { fetchEnsemblRelease, fetchVepByHgvs, type VepResult } from '../api/vep.ts'
@@ -30,6 +31,8 @@ export interface SmallAnalysis {
   vep: SourceResult<VepResult> | null
   choice: TranscriptChoice | null
   evidence: SmallEvidence | null
+  /** ERepo の専門家パネル分類（ない場合は ok で空配列） */
+  erepo?: SourceResult<ErepoClassification[]>
   sources: SourceRecord[]
   /** 解析を続行できなかった理由 */
   fatal?: string
@@ -89,14 +92,18 @@ export async function analyzeSmall(p: ParsedInput, genome: Genome, geneHint?: st
   const mvId = chrom ? `chr${chrom}:${g.split(':')[1]}` : undefined
 
   const hgvsC = p.kind === 'hgvs_c' ? p : undefined
-  const [vep, mv, mvVer, ensRel, dosageFile, cspecFile] = await Promise.all([
+  const [vep, mv, mvVer, ensRel, dosageFile, cspecFile, erepo] = await Promise.all([
     fetchVepByHgvs(g, effGenome),
     mvId ? fetchMyVariant(mvId, effGenome === 'GRCh38' ? 'hg38' : 'hg19') : Promise.resolve(null),
     fetchMyVariantVersion(),
     fetchEnsemblRelease(effGenome),
     loadDosageGenes(effGenome),
     loadCSpec(),
+    fetchErepo(res.allele.caid),
   ])
+  // ERepo は VEP 失敗時にも最優先表示できるよう、ここで記録する。分類の版は日付で特定する。
+  out.erepo = erepo
+  out.sources.push(rec(erepo, erepo.status === 'ok' ? 'ERepo（分類ごとの公開日を併記）' : null))
   out.vep = vep
   out.sources.push(rec(vep, ensRel.status === 'ok' ? `Ensembl release ${ensRel.data.release}` : null))
   if (ensRel.status === 'failed') out.sources.push(rec(ensRel, null))

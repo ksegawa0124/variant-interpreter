@@ -19,17 +19,17 @@ async function load<T extends { meta: DataMeta }>(source: string, path: string, 
 
 export const loadDosageGenes = (g: Genome) =>
   load<DosageFile>('ClinGen Dosage (gene)', `dosage-gene-${g}.json`, () =>
-    g === 'GRCh38' ? import('./generated/dosage-gene-GRCh38.json') : import('./generated/dosage-gene-GRCh37.json'))
+    g === 'GRCh38' ? import('./generated/dosage-gene-GRCh38.json', { with: { type: 'json' } }) : import('./generated/dosage-gene-GRCh37.json', { with: { type: 'json' } }))
 
 export const loadDosageRegions = (g: Genome) =>
   load<DosageFile>('ClinGen Dosage (region)', `dosage-region-${g}.json`, () =>
-    g === 'GRCh38' ? import('./generated/dosage-region-GRCh38.json') : import('./generated/dosage-region-GRCh37.json'))
+    g === 'GRCh38' ? import('./generated/dosage-region-GRCh38.json', { with: { type: 'json' } }) : import('./generated/dosage-region-GRCh37.json', { with: { type: 'json' } }))
 
 export const loadValidity = () =>
-  load<ValidityFile>('ClinGen Gene-Disease Validity', 'gene-validity.json', () => import('./generated/gene-validity.json'))
+  load<ValidityFile>('ClinGen Gene-Disease Validity', 'gene-validity.json', () => import('./generated/gene-validity.json', { with: { type: 'json' } }))
 
 export const loadCSpec = () =>
-  load<CSpecFile>('ClinGen CSpec Registry', 'cspec.json', () => import('./generated/cspec.json'))
+  load<CSpecFile>('ClinGen CSpec Registry', 'cspec.json', () => import('./generated/cspec.json', { with: { type: 'json' } }))
 
 // ---- 検索ヘルパ（純粋関数） ----
 
