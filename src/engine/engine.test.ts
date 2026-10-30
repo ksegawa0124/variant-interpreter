@@ -148,6 +148,11 @@ describe('PS1 / PM5', () => {
     expect(state(ev, 'PS1').state).toBe('not_met')
     expect(state(ev, 'PM5').state).toBe('met')
   })
+  it('同一残基の終止コドン獲得(Ter)は PM5 の根拠にしない', () => {
+    const ev = evidence({ clinvarCodon: ok('ClinVar', [codon('Ter')]) })
+    expect(state(ev, 'PM5').state).toBe('not_met')
+    expect(state(ev, 'PS1').state).toBe('not_met')
+  })
   it('入力自身と非 P/LP は数えない', () => {
     const ev = evidence({ clinvarCodon: ok('ClinVar', [codon('Gln', 'self'), codon('Trp', 'o2', false)]) })
     expect(state(ev, 'PS1').state).toBe('not_met')

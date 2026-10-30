@@ -240,7 +240,8 @@ function evalCodon(id: 'PS1' | 'PM5', ev: SmallEvidence, ps1Met: boolean): CodeE
   const pc = parseProteinChange(ev.transcript?.hgvsp)
   if (!isMissense(ev.transcript) || !pc) return { ...e, state: 'not_applicable', reason: 'ミスセンス以外には適用しない' }
   if (ev.clinvarCodon.status === 'failed') return { ...e, state: 'not_evaluable', reason: failedReason(ev.clinvarCodon) }
-  const others = ev.clinvarCodon.data.filter((v) => v.id !== ev.selfId && v.plp)
+  // PS1/PM5 の根拠は「同一残基の既知のミスセンス」。終止コドン獲得(Ter)は機能喪失の根拠であり対象外
+  const others = ev.clinvarCodon.data.filter((v) => v.id !== ev.selfId && v.plp && v.alt !== 'Ter')
   const same = others.filter((v) => v.alt === pc.alt)
   const diff = others.filter((v) => v.alt !== pc.alt)
   const cite = (vs: ClinvarCodonVariant[]) => vs.slice(0, 3).map((v) => `VCV${v.clinvarId ?? '?'}(p.${pc.ref}${pc.pos}${v.alt})`).join(', ')
